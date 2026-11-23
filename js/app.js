@@ -43,7 +43,9 @@ const UI={
     const names=[...new Set(arr.map(b=>b.nama))];
     $('dlJenis').innerHTML=names.map(n=>`<option value="${esc(n)}"></option>`).join('');
     S.jenisSet=new Set(names.map(norm)); $('nMaster').textContent=arr.length;
-    renderMaster(); updateBanner(); renderGen('kain'); renderGen('benang');
+    renderMaster(); updateBanner();
+    if(ready&&S._mSeen) scheduleRejenis(); else { renderGen('kain'); renderGen('benang'); }
+    if(ready) S._mSeen=true;
   },
   rule(r,ready){
     r=r||{};
@@ -132,6 +134,30 @@ async function doGenerate(type){
   }
   const miss=S.gen[type].filter(r=>r.unk&&r.unk.length&&!r.dirty).length;
   toast(`${S.gen[type].length} baris dalam ${ms} ms`+(saved?` · ${saved} disimpan ke Database`:'')+(miss?` · ${miss} baris perlu tambahan Master`:''),4000);
+}
+// Setelah Master berubah: jeniskan ulang HANYA baris yang belum dikenali (cepat, tanpa generate ulang semuanya)
+let _rjT=null;
+function scheduleRejenis(){ clearTimeout(_rjT); _rjT=setTimeout(rejenisUnknown,250); }
+async function rejenisUnknown(){
+  for(const type of ['kain','benang']){
+    const rows=S.gen[type]; if(!rows.length){ renderGen(type); continue; }
+    let fixed=0; const news=[], seen=new Set();
+    rows.forEach((r,i)=>{
+      if(r.dirty||!r.nama||!(r.status==='gagal'||r.status==='cek')) return;
+      const n=(type==='kain'?genKain:genBenang)(r.nama);
+      if(n.status==='baru'||n.status==='master'){ fixed++; rows[i]=n; const k=keyOf(n.nama).k; if(n.status==='baru'&&!seen.has(k)){ seen.add(k); news.push({...n,src:'auto'}); } }
+      else rows[i]={...n,saved:r.saved};
+    });
+    renderGen(type);
+    if(fixed){
+      let saved=0;
+      if(news.length&&$(ID[type].auto).checked&&S.online&&S.canWrite){
+        try{ await Data.saveStore(type,news); saved=news.length; rows.forEach(r=>{ if(r.status==='baru'&&seen.has(keyOf(r.nama).k)) r.saved=true; }); renderGen(type); }
+        catch(e){ toast('Hasil baru belum disimpan: '+writeErr(e),4500); continue; }
+      }
+      toast(`${fixed} baris ${type} sekarang dikenali`+(saved?` · ${saved} disimpan ke Database`:''),3500);
+    }
+  }
 }
 const STAT={master:['t-master','Database'],baru:['t-baru','Baru'],gagal:['t-gagal','Tidak dikenali'],cek:['t-cek','Perlu cek'],diubah:['t-manual','Diubah']};
 function stOf(type,r){ if(r.status==='kosong') return 'kosong'; if(r.dirty) return rowOk(type,r)?'diubah':'cek'; return r.status; }
