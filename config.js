@@ -4,6 +4,6 @@
 // Publishable key memang aman ditaruh di sini: tanpa login, database menolak semua akses (Row Level Security).
 // JANGAN pernah menaruh Secret key (sb_secret_...) atau service_role key di file ini.
 window.PENJENISAN_CONFIG = {
-  SUPABASE_URL: 'https://xxxx.supabase.co',
-  SUPABASE_KEY: 'isi-publishable-key'
+  SUPABASE_URL: 'https://uurlshnmjnkbmrhzhweu.supabase.co',
+  SUPABASE_KEY: 'sb_publishable_IwdU2WHmMb6pZG-7xU1joA_aj2GVGhS'
 };
