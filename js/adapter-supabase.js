@@ -79,8 +79,9 @@ const Data=(()=>{
   }
   function displayName(){
     const u=session&&session.user||{}; const em=u.email||''; const md=u.user_metadata||{};
-    const raw=(md.display_name||md.full_name||md.name||em.split('@')[0]||'').replace(/[._-]+/g,' ').trim();
-    return raw.split(/\s+/).map(w=>w?w[0].toUpperCase()+w.slice(1).toLowerCase():'').join(' ');
+    const set=String(md.display_name||md.full_name||md.name||'').trim();
+    if(set) return set;                                   // display name dari Supabase: tampil apa adanya
+    return (em.split('@')[0]||'').replace(/[._-]+/g,' ').trim().split(/\s+/).map(w=>w?w[0].toUpperCase()+w.slice(1).toLowerCase():'').join(' ');
   }
   function hideLogin(){
     $('login').classList.remove('show'); $('who').classList.add('show');
@@ -151,6 +152,11 @@ const Data=(()=>{
         saved.forEach(r=>{ const e=(type==='kain'?toKain:toBenang)(r); maps[type].set(e.k,e); });
       }
       pushStore(type);
+    },
+    async deleteStoreMany(type,names){
+      const ns=[...new Set(names.map(norm))];
+      for(let i=0;i<ns.length;i+=200){ chk(await sb.from(TBL[type]).delete().in('nama',ns.slice(i,i+200))); }
+      ns.forEach(n=>maps[type].delete(keyOf(n).k)); pushStore(type);
     },
     async deleteStore(type,nama){ chk(await sb.from(TBL[type]).delete().eq('nama',norm(nama))); maps[type].delete(keyOf(nama).k); pushStore(type); },
     async saveMasterItem(id,data){
