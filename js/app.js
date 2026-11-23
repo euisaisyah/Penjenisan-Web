@@ -107,6 +107,16 @@ async function doGenerate(type){
   const ls=$(ID[type].inp).value.replace(/\r/g,'').split('\n');
   while(ls.length&&!ls[ls.length-1].trim()) ls.pop();
   if(!ls.length){ toast('Daftar masih kosong.'); return; }
+  if(type==='kain'){
+    const isi=ls.filter(x=>x.trim()), yarn=isi.filter(x=>/^\s*YARN\s*;/i.test(x)).length;
+    if(yarn&&yarn>=isi.length/2){
+      if(await confirmDlg('Ini sepertinya daftar benang',`<p><b>${yarn}</b> dari ${isi.length} baris diawali <span class="mono">YARN;</span>, yaitu format nama benang.</p><p>Pindahkan ke <b>Penjenisan Benang</b> supaya tidak tersimpan sebagai kain?</p>`,'Pindah ke Penjenisan Benang')){
+        $('inpB').value=$(ID.kain.inp).value; $(ID.kain.inp).value=''; S.gen.kain=[]; renderGen('kain');
+        location.hash='#benang'; await doGenerate('benang');
+      }
+      return;
+    }
+  }
   const t0=performance.now();
   S.gen[type]=ls.map(type==='kain'?genKain:genBenang); S.filt[type]='';
   const ms=Math.round(performance.now()-t0);
@@ -166,7 +176,11 @@ function renderGen(type){
 for(const type of ['kain','benang']){
   const I=ID[type];
   $(I.chips).addEventListener('click',e=>{const c=e.target.closest('.chip'); if(!c) return; S.filt[type]=c.dataset.f; renderGen(type);});
-  $(I.miss).addEventListener('click',e=>{const b=e.target.closest('[data-addm]'); if(!b) return; const seg=b.dataset.addm; openM(null,{nama:'',alias:saranAlias(seg),seg});});
+  $(I.miss).addEventListener('click',e=>{
+    const b=e.target.closest('[data-addm]'); if(!b) return; const seg=b.dataset.addm;
+    const src=[...new Set(S.gen[type].filter(r=>!r.dirty&&r.unk&&r.unk.includes(seg)).map(r=>r.nama))];
+    openM(null,{nama:'',alias:saranAlias(seg),seg,src,type});
+  });
   $(I.wrap).addEventListener('change',e=>{
     const t=e.target, r=S.gen[type][+t.dataset.i]; if(!r) return;
     if(t.classList.contains('g')){ r.g=t.value; r.gm=true; }
@@ -241,10 +255,9 @@ function renderDb(){
   if(fg.dataset.t!==type){ fg.innerHTML='<option value="">Semua grouping</option>'+GROUPS[type].map(g=>`<option>${g}</option>`).join(''); fg.dataset.t=type; }
   const c={manual:0}, gc={}; all.forEach(e=>{ if(e.src==='manual') c.manual++; gc[e.g||'—']=(gc[e.g||'—']||0)+1; });
   $('dbTiles').innerHTML=`<div class="tile"><div class="v">${all.length}</div><div class="l">${type==='kain'?'Kain':'Benang'} tersimpan</div></div>`+GROUPS[type].map(g=>`<div class="tile"><div class="v">${gc[g]||0}</div><div class="l">${type==='kain'?'Kain':'Benang'} ${g}</div></div>`).join('')+`<div class="tile"><div class="v">${c.manual}</div><div class="l">Dikoreksi manual</div></div>`;
-  const q=norm($('qDb').value), fs=$('fSrc').value, fgv=fg.value;
-  let list=all.filter(e=>(!fs||e.src===fs)&&(!fgv||e.g===fgv)&&(!q||e.nama.includes(q)||(type==='kain'?e.b.some(x=>norm(x).includes(q)):norm(e.jenis).includes(q))));
-  list.sort((a,b)=>a.nama.localeCompare(b.nama));
+  const list=dbFiltered();
   const total=list.length, shown=list.slice(0,500);
+  $('delDb').disabled=!total; $('delDb').textContent=total&&total<all.length?`Hapus yang tampil (${total})`:(total?`Hapus semua (${total})`:'Hapus yang tampil');
   $('dbInfo').textContent=total>500?`Menampilkan 500 dari ${total}, persempit pencarian`:`${total} baris`;
   if(!all.length){ $('wrapDb').innerHTML=`<div class="empty">${S.online?(st.ready?`Database ${type} masih kosong. Hasil Generate dan impor akan masuk ke sini.`:'Memuat…'):'Database tidak tersedia.'}</div>`; return; }
   const srcTag={manual:'<span class="tag t-manual">Manual</span>',auto:'<span class="tag t-auto">Otomatis</span>',import:'<span class="tag t-import">Impor</span>'};
@@ -252,6 +265,20 @@ function renderDb(){
   const head=type==='kain'?'<th>Nama kain</th><th>Benang 1</th><th class="num">%</th><th>Benang 2</th><th class="num">%</th><th>Benang 3</th><th class="num">%</th><th>Grouping</th><th>Sumber</th><th>Diubah</th><th></th>':'<th>Nama benang</th><th>Jenis benang</th><th>Grouping</th><th>Sumber</th><th>Diubah</th><th></th>';
   $('wrapDb').innerHTML=`<table><thead><tr>${head}</tr></thead><tbody>${shown.map(e=>`<tr><td class="nm"${type==='benang'?' style="word-break:break-all"':''}>${esc(e.nama)}</td>${type==='kain'?[0,1,2].map(j=>`<td>${esc(e.b[j])}</td><td class="num">${e.b[j]?fmtPct(e.p[j]):''}</td>`).join(''):`<td>${esc(e.jenis)}</td>`}<td>${gTag(e.g)}</td><td>${srcTag[e.src]||esc(e.src)}</td>${when(e)}<td><button class="btn sm" data-edit="${e.k}">Ubah</button></td></tr>`).join('')}</tbody></table>`;
 }
+function dbFiltered(){
+  const type=S.dbView, all=[...S.store[type].map.values()];
+  const q=norm($('qDb').value), fs=$('fSrc').value, fgv=$('fGrp').value;
+  return all.filter(e=>(!fs||e.src===fs)&&(!fgv||e.g===fgv)&&(!q||e.nama.includes(q)||(type==='kain'?e.b.some(x=>norm(x).includes(q)):norm(e.jenis).includes(q)))).sort((a,b)=>a.nama.localeCompare(b.nama));
+}
+$('delDb').onclick=async()=>{
+  if(!needDb()) return;
+  const type=S.dbView, list=dbFiltered(), all=S.store[type].map.size;
+  if(!list.length) return;
+  const contoh=list.slice(0,5).map(e=>`<li class="mono" style="word-break:break-all">${esc(e.nama)}</li>`).join('')+(list.length>5?`<li>… dan ${list.length-5} lainnya</li>`:'');
+  const semua=list.length===all;
+  if(!await confirmDlg(`Hapus ${list.length} ${type} dari Database`,`<p>${semua?`<b>Semua</b> data ${type} (${all} baris) akan dihapus.`:`Baris yang <b>sedang tampil</b> sesuai pencarian &amp; filter akan dihapus (${list.length} dari ${all}).`}</p><ul style="margin:0;padding-left:18px;font-size:12.5px">${contoh}</ul><p class="hint">Tidak bisa dibatalkan. Generate berikutnya akan menjeniskan ulang nama-nama ini.</p>`,`Hapus ${list.length}`)) return;
+  try{ await Data.deleteStoreMany(type,list.map(e=>e.nama)); toast(`${list.length} ${type} dihapus dari Database`); }catch(e){ toast(writeErr(e),4500); }
+};
 $('dbSeg').onclick=e=>{const b=e.target.closest('button'); if(!b) return; S.dbView=b.dataset.v; renderDb();};
 $('qDb').oninput=renderDb; $('fSrc').onchange=renderDb; $('fGrp').onchange=renderDb;
 let cur=null;
@@ -316,6 +343,14 @@ function openM(b,pre){
   $('dmNama').value=b?b.nama:(pre&&pre.nama||''); $('dmAlias').value=b?b.alias||'':(pre&&pre.alias||'');
   $('dmT1').value=b?b.t1||'':''; $('dmT2').value=b?b.t2||'':'';
   $('dmFix').value=b&&hasFix(b)?pctIn(b.fix):''; $('dmDel').style.display=b?'':'none';
+  const src=pre&&pre.src||[];
+  $('dmSrcBox').hidden=!src.length;
+  if(src.length){
+    $('dmSrcLbl').textContent=`Nama ${pre.type||''} asli yang memunculkan "${pre.seg}" (${src.length})`;
+    const words=String(pre.seg).split(/\s+/).map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+    const re=new RegExp(words.join('[\\s,.;-]*'),'i');
+    $('dmSrc').innerHTML=src.map(n=>{ const m=n.match(re); return `<div><span>${m?esc(n.slice(0,m.index))+'<mark>'+esc(m[0])+'</mark>'+esc(n.slice(m.index+m[0].length)):esc(n)}</span></div>`; }).join('');
+  }
   dmHint(); $('dlgM').showModal(); $('dmNama').focus();
 }
 $('dmNama').oninput=dmHint;
