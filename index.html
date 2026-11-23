@@ -30,14 +30,17 @@ header{background:var(--surface);border-bottom:1px solid var(--line);padding:0 2
 .brand small{display:block;font-size:11.5px;color:var(--muted);line-height:1.2}
 .right{margin-left:auto;display:flex;align-items:center;gap:14px;flex:none}
 .dbstate{font-size:12px;display:flex;align-items:center;gap:6px;color:var(--muted);white-space:nowrap}
+.dbstate span:last-child{max-width:110px;overflow:hidden;text-overflow:ellipsis}
+.who .av:empty{display:none}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .dot.on{background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)} .dot.off{background:var(--bad);box-shadow:0 0 0 3px var(--bad-soft)} .dot.wait{background:var(--warn);box-shadow:0 0 0 3px var(--warn-soft)}
-nav{display:flex;gap:2px;overflow-x:auto;align-items:stretch}
+nav{display:flex;gap:2px;overflow-x:auto;align-items:stretch;flex:1 1 auto;min-width:0;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
 nav a{display:flex;align-items:center;padding:0 12px;text-decoration:none;color:var(--muted);border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap;font-weight:500}
 nav a:hover{color:var(--ink)}
 nav a.act{color:var(--accent);border-bottom-color:var(--accent)}
 nav .sep{width:1px;background:var(--line);margin:16px 8px}
-@media (max-width:1100px){.bar{flex-wrap:wrap;gap:0 16px}.brand{min-height:54px}nav{order:3;width:100%;min-height:44px;margin:0 -8px}}
+@media (max-width:1400px){.bar{flex-wrap:wrap;gap:0 16px}.brand{min-height:54px}nav{order:3;width:100%;min-height:44px;margin:0 -8px}}
 nav .n{font:500 11px var(--f-mono);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:0 6px;margin-left:4px}
 main{padding:18px 20px 40px;max-width:1500px;margin:0 auto}
 .panel{display:none}.panel.act{display:block}
@@ -140,7 +143,7 @@ td.note{font-size:12px;color:var(--warn);min-width:160px}
 .who{display:none;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 3px;background:var(--bg)}
 .who.show{display:flex}
 .who .av{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font:600 11px var(--f-body);flex:none}
-.who .em{font-size:12px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who .em{font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);border-radius:999px}
 .btn.ghost:hover{color:var(--bad);border-color:transparent;background:var(--bad-soft)}
 @media (max-width:640px){.who .em,.dbstate span:last-child{display:none}}
