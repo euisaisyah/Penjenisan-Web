@@ -110,6 +110,9 @@ function yarnCands(raw){
       }
       const ri=tok.findIndex(isRatio);
       if(ri>=0) add(fixCode(lastAlphaBefore(ri)||tok.find(t=>isAlpha(t)&&!BUKAN_KODE.has(t))||'',tok),tok[ri]);
+      // (c) KODE,Td,angka denier  (SPX,Td,70D -> SPX 70)
+      const ki=tok.findIndex(t=>isAlpha(t)&&!BUKAN_KODE.has(t));
+      if(ki>=0){ let j=ki+1; if(tok[j]==='TD') j++; if(isNum(tok[j])) add(fixCode(tok[ki],tok),String(+tok[j])); }
     }
     if(yarn&&cands.length) continue;   // format YARN: cukup kandidat (a)/(b)
     const kodeUtama=tok.find(t=>isAlpha(t)&&!BUKAN_KODE.has(t));
