@@ -40,7 +40,7 @@ const Data=(()=>{
       maps.kain=new Map(k.map(toKain).map(e=>[e.k,e])); maps.benang=new Map(b.map(toBenang).map(e=>[e.k,e]));
       S.online=true; loaded=true;
       UI.rule(rule,true); pushMaster(); pushStore('kain'); pushStore('benang'); UI.banner();
-      UI.state('on','Tersambung · '+(session.user.email||''));
+      UI.state('on','Tersambung');
       subscribe();
     }catch(e){ S.online=false; UI.banner(); UI.state('off','Gagal memuat data: '+(e.message||e.code)); }
   }
@@ -77,7 +77,18 @@ const Data=(()=>{
     box.dataset.mode=rec?'recovery':'login';
     setTimeout(()=>(rec?$('lgPass'):$('lgEmail')).focus(),50);
   }
-  function hideLogin(){ $('login').classList.remove('show'); $('who').classList.add('show'); $('whoName').textContent=session&&session.user?session.user.email:''; }
+  function displayName(){
+    const u=session&&session.user||{}; const em=u.email||''; const md=u.user_metadata||{};
+    const raw=(md.display_name||md.full_name||md.name||em.split('@')[0]||'').replace(/[._-]+/g,' ').trim();
+    return raw.split(/\s+/).map(w=>w?w[0].toUpperCase()+w.slice(1).toLowerCase():'').join(' ');
+  }
+  function hideLogin(){
+    $('login').classList.remove('show'); $('who').classList.add('show');
+    const em=session&&session.user?session.user.email||'':'';
+    const nm=displayName();
+    $('whoName').textContent=nm||em; $('who').title=em;
+    $('whoAv').textContent=nm.split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+  }
   function wireLogin(){
     $('fmLogin').addEventListener('submit',async ev=>{
       ev.preventDefault();
