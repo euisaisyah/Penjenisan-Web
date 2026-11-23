@@ -147,6 +147,10 @@ td.note{font-size:12px;color:var(--warn);min-width:160px}
 .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);border-radius:999px}
 .btn.ghost:hover{color:var(--bad);border-color:transparent;background:var(--bad-soft)}
 @media (max-width:640px){.who .em,.dbstate span:last-child{display:none}}
+.lst.src{max-height:170px}
+.lst.src div{font-size:12px}
+.lst.src mark{background:var(--accent-soft);color:var(--accent);border-radius:3px;padding:0 2px}
+#dlgM{width:min(640px,94vw)}
 .lst .none{color:var(--muted);font-family:var(--f-body);padding:8px}
 </style>
 </head>
@@ -238,6 +242,7 @@ td.note{font-size:12px;color:var(--warn);min-width:160px}
         <select id="fSrc" aria-label="Filter sumber"><option value="">Semua sumber</option><option value="manual">Manual</option><option value="auto">Otomatis</option><option value="import">Impor</option></select>
         <select id="fGrp" aria-label="Filter grouping"></select>
         <span class="muted" id="dbInfo"></span><span class="spacer"></span>
+        <button class="btn danger" id="delDb" title="Hapus semua baris yang sedang tampil sesuai pencarian & filter">Hapus yang tampil</button>
         <button class="btn" id="expDb">Unduh Excel</button>
       </div>
       <div class="tbl-wrap" id="wrapDb"></div>
@@ -326,6 +331,7 @@ td.note{font-size:12px;color:var(--warn);min-width:160px}
 <dialog id="dlgM"><form method="dialog">
   <div class="dlg-h" id="dmTitle">Jenis benang</div>
   <div class="dlg-b">
+    <div class="fg" id="dmSrcBox" hidden><label id="dmSrcLbl">Nama asli</label><div class="lst src" id="dmSrc"></div></div>
     <div class="fg"><label for="dmNama">Nama jenis benang</label><input type="text" id="dmNama" list="dlJenis" autocomplete="off"><span class="hint" id="dmHint"></span></div>
     <div class="fg"><label for="dmAlias">Alias (pisahkan dengan ;)</label><input type="text" id="dmAlias"></div>
     <div class="two" style="gap:8px"><div class="fg"><label for="dmT1">Tambahan 1</label><input type="text" id="dmT1" placeholder="SAMPLE / M71"></div><div class="fg"><label for="dmT2">Tambahan 2</label><input type="text" id="dmT2"></div></div>
