@@ -32,7 +32,7 @@ const S={
   mList:[], mReady:false, master:null, fixMap:{}, jenisSet:new Set(),
   rule:{...RULE_DEFAULT}, ruleReady:false,
   store:{kain:{map:new Map(),ready:false},benang:{map:new Map(),ready:false}},
-  gen:{kain:[],benang:[]}, filt:{kain:'',benang:''}, dbView:'kain'
+  gen:{kain:[],benang:[]}, filt:{kain:'',benang:''}, dbView:'kain', sel:{kain:new Set(),benang:new Set()}
 };
 const UI={
   state(cls,txt){ $('dbstate').innerHTML=`<span class="dot ${cls}"></span><span>${esc(txt)}</span>`; },
@@ -257,27 +257,39 @@ function renderDb(){
   $('dbTiles').innerHTML=`<div class="tile"><div class="v">${all.length}</div><div class="l">${type==='kain'?'Kain':'Benang'} tersimpan</div></div>`+GROUPS[type].map(g=>`<div class="tile"><div class="v">${gc[g]||0}</div><div class="l">${type==='kain'?'Kain':'Benang'} ${g}</div></div>`).join('')+`<div class="tile"><div class="v">${c.manual}</div><div class="l">Dikoreksi manual</div></div>`;
   const list=dbFiltered();
   const total=list.length, shown=list.slice(0,500);
-  $('delDb').disabled=!total; $('delDb').textContent=total&&total<all.length?`Hapus yang tampil (${total})`:(total?`Hapus semua (${total})`:'Hapus yang tampil');
+  const sel=S.sel[type]; for(const k of [...sel]) if(!st.map.has(k)) sel.delete(k);
+  const nSel=sel.size, nSelVis=list.filter(e=>sel.has(e.k)).length;
+  $('delDb').disabled=!nSel; $('delDb').textContent=nSel?`Hapus terpilih (${nSel})`:'Hapus terpilih';
+  $('selInfo').innerHTML=nSel?`${nSel} dipilih${nSel>nSelVis?` (${nSel-nSelVis} di luar filter)`:''} · <button type="button" id="selClear">Batal pilih</button>`:'';
   $('dbInfo').textContent=total>500?`Menampilkan 500 dari ${total}, persempit pencarian`:`${total} baris`;
   if(!all.length){ $('wrapDb').innerHTML=`<div class="empty">${S.online?(st.ready?`Database ${type} masih kosong. Hasil Generate dan impor akan masuk ke sini.`:'Memuat…'):'Database tidak tersedia.'}</div>`; return; }
   const srcTag={manual:'<span class="tag t-manual">Manual</span>',auto:'<span class="tag t-auto">Otomatis</span>',import:'<span class="tag t-import">Impor</span>'};
   const when=e=>{ const who=Data.whoName(e); return `<td class="muted" style="font-size:12px;white-space:nowrap">${fmtDate(e.at)}${who?' · '+esc(who):''}</td>`; };
-  const head=type==='kain'?'<th>Nama kain</th><th>Benang 1</th><th class="num">%</th><th>Benang 2</th><th class="num">%</th><th>Benang 3</th><th class="num">%</th><th>Grouping</th><th>Sumber</th><th>Diubah</th><th></th>':'<th>Nama benang</th><th>Jenis benang</th><th>Grouping</th><th>Sumber</th><th>Diubah</th><th></th>';
-  $('wrapDb').innerHTML=`<table><thead><tr>${head}</tr></thead><tbody>${shown.map(e=>`<tr><td class="nm"${type==='benang'?' style="word-break:break-all"':''}>${esc(e.nama)}</td>${type==='kain'?[0,1,2].map(j=>`<td>${esc(e.b[j])}</td><td class="num">${e.b[j]?fmtPct(e.p[j]):''}</td>`).join(''):`<td>${esc(e.jenis)}</td>`}<td>${gTag(e.g)}</td><td>${srcTag[e.src]||esc(e.src)}</td>${when(e)}<td><button class="btn sm" data-edit="${e.k}">Ubah</button></td></tr>`).join('')}</tbody></table>`;
+  const allOn=total>0&&nSelVis===total, someOn=nSelVis>0&&!allOn;
+  const ck=`<th class="ck"><input type="checkbox" id="selAll" ${allOn?'checked':''} title="Pilih semua ${total} baris hasil pencarian/filter" aria-label="Pilih semua"></th>`;
+  const head=ck+(type==='kain'?'<th>Nama kain</th><th>Benang 1</th><th class="num">%</th><th>Benang 2</th><th class="num">%</th><th>Benang 3</th><th class="num">%</th><th>Grouping</th><th>Sumber</th><th>Diubah</th><th></th>':'<th>Nama benang</th><th>Jenis benang</th><th>Grouping</th><th>Sumber</th><th>Diubah</th><th></th>');
+  $('wrapDb').innerHTML=`<table><thead><tr>${head}</tr></thead><tbody>${shown.map(e=>`<tr class="${sel.has(e.k)?'picked':''}"><td class="ck"><input type="checkbox" class="sel" data-k="${e.k}" ${sel.has(e.k)?'checked':''} aria-label="Pilih ${esc(e.nama)}"></td><td class="nm"${type==='benang'?' style="word-break:break-all"':''}>${esc(e.nama)}</td>${type==='kain'?[0,1,2].map(j=>`<td>${esc(e.b[j])}</td><td class="num">${e.b[j]?fmtPct(e.p[j]):''}</td>`).join(''):`<td>${esc(e.jenis)}</td>`}<td>${gTag(e.g)}</td><td>${srcTag[e.src]||esc(e.src)}</td>${when(e)}<td><button class="btn sm" data-edit="${e.k}">Ubah</button></td></tr>`).join('')}</tbody></table>`;
+  const sa=$('selAll'); if(sa) sa.indeterminate=someOn;
 }
 function dbFiltered(){
   const type=S.dbView, all=[...S.store[type].map.values()];
   const q=norm($('qDb').value), fs=$('fSrc').value, fgv=$('fGrp').value;
   return all.filter(e=>(!fs||e.src===fs)&&(!fgv||e.g===fgv)&&(!q||e.nama.includes(q)||(type==='kain'?e.b.some(x=>norm(x).includes(q)):norm(e.jenis).includes(q)))).sort((a,b)=>a.nama.localeCompare(b.nama));
 }
+$('wrapDb').addEventListener('change',e=>{
+  const sel=S.sel[S.dbView];
+  if(e.target.id==='selAll'){ const list=dbFiltered(); if(e.target.checked) list.forEach(x=>sel.add(x.k)); else list.forEach(x=>sel.delete(x.k)); renderDb(); return; }
+  if(e.target.classList.contains('sel')){ if(e.target.checked) sel.add(e.target.dataset.k); else sel.delete(e.target.dataset.k); renderDb(); }
+});
+$('selInfo').addEventListener('click',e=>{ if(e.target.id==='selClear'){ S.sel[S.dbView].clear(); renderDb(); } });
 $('delDb').onclick=async()=>{
   if(!needDb()) return;
-  const type=S.dbView, list=dbFiltered(), all=S.store[type].map.size;
+  const type=S.dbView, sel=S.sel[type], map=S.store[type].map;
+  const list=[...sel].map(k=>map.get(k)).filter(Boolean).sort((a,b)=>a.nama.localeCompare(b.nama));
   if(!list.length) return;
-  const contoh=list.slice(0,5).map(e=>`<li class="mono" style="word-break:break-all">${esc(e.nama)}</li>`).join('')+(list.length>5?`<li>… dan ${list.length-5} lainnya</li>`:'');
-  const semua=list.length===all;
-  if(!await confirmDlg(`Hapus ${list.length} ${type} dari Database`,`<p>${semua?`<b>Semua</b> data ${type} (${all} baris) akan dihapus.`:`Baris yang <b>sedang tampil</b> sesuai pencarian &amp; filter akan dihapus (${list.length} dari ${all}).`}</p><ul style="margin:0;padding-left:18px;font-size:12.5px">${contoh}</ul><p class="hint">Tidak bisa dibatalkan. Generate berikutnya akan menjeniskan ulang nama-nama ini.</p>`,`Hapus ${list.length}`)) return;
-  try{ await Data.deleteStoreMany(type,list.map(e=>e.nama)); toast(`${list.length} ${type} dihapus dari Database`); }catch(e){ toast(writeErr(e),4500); }
+  const contoh=list.slice(0,6).map(e=>`<li class="mono" style="word-break:break-all">${esc(e.nama)}</li>`).join('')+(list.length>6?`<li>… dan ${list.length-6} lainnya</li>`:'');
+  if(!await confirmDlg(`Hapus ${list.length} ${type} dari Database`,`<p>Baris yang dicentang akan dihapus:</p><ul style="margin:0;padding-left:18px;font-size:12.5px">${contoh}</ul><p class="hint">Tidak bisa dibatalkan. Generate berikutnya akan menjeniskan ulang nama-nama ini.</p>`,`Hapus ${list.length}`)) return;
+  try{ await Data.deleteStoreMany(type,list.map(e=>e.nama)); sel.clear(); renderDb(); toast(`${list.length} ${type} dihapus dari Database`); }catch(e){ toast(writeErr(e),4500); }
 };
 $('dbSeg').onclick=e=>{const b=e.target.closest('button'); if(!b) return; S.dbView=b.dataset.v; renderDb();};
 $('qDb').oninput=renderDb; $('fSrc').onchange=renderDb; $('fGrp').onchange=renderDb;
