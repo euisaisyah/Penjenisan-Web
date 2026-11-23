@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Penjenisan Kain &amp; Benang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: header + tab strip; panel Penjenisan = input kiri, hasil kanan; Database & Master = tabel dengan toolbar */
+:root{
+  --bg:#f4f5f7; --surface:#ffffff; --ink:#1b2130; --muted:#5d6577; --line:#dcdfe6;
+  --accent:#23458f; --accent-ink:#ffffff; --accent-soft:#e6ecf8;
+  --ok:#17794a; --ok-soft:#e3f4ea; --warn:#a15c00; --warn-soft:#fdf1dc; --bad:#b4232c; --bad-soft:#fbe5e6; --info:#23458f; --info-soft:#e6ecf8; --vio:#6b3fa0; --vio-soft:#f0e8f8;
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif; --f-body:"IBM Plex Sans","Segoe UI",Roboto,sans-serif; --f-mono:"IBM Plex Mono",Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#12151c; --surface:#1a1f29; --ink:#e7eaf1; --muted:#9aa3b5; --line:#2d3442;
+  --accent:#7d9ee6; --accent-ink:#0e1320; --accent-soft:#222c42;
+  --ok:#5cc98f; --ok-soft:#173225; --warn:#e7a650; --warn-soft:#3a2b14; --bad:#f07a80; --bad-soft:#3c1c1f; --info:#7d9ee6; --info-soft:#222c42; --vio:#c3a2ec; --vio-soft:#2f2440;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#12151c; --surface:#1a1f29; --ink:#e7eaf1; --muted:#9aa3b5; --line:#2d3442;
+  --accent:#7d9ee6; --accent-ink:#0e1320; --accent-soft:#222c42;
+  --ok:#5cc98f; --ok-soft:#173225; --warn:#e7a650; --warn-soft:#3a2b14; --bad:#f07a80; --bad-soft:#3c1c1f; --info:#7d9ee6; --info-soft:#222c42; --vio:#c3a2ec; --vio-soft:#2f2440;
+  color-scheme:dark; }
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body)}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:var(--surface);border-bottom:1px solid var(--line);padding:12px 20px 0;position:sticky;top:0;z-index:5}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+h1{font:700 19px/1.2 var(--f-display);margin:0;letter-spacing:.01em}
+.sub{color:var(--muted);font-size:13px}
+.dbstate{margin-left:auto;font-size:12px;display:flex;align-items:center;gap:6px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--ok)} .dot.off{background:var(--bad)} .dot.wait{background:var(--warn)}
+nav{display:flex;gap:2px;margin-top:10px;overflow-x:auto}
+nav a{padding:9px 14px;text-decoration:none;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;font-weight:500}
+nav a:hover{color:var(--ink)}
+nav a.act{color:var(--accent);border-bottom-color:var(--accent)}
+nav .sep{width:1px;background:var(--line);margin:8px 6px}
+nav .n{font:500 11px var(--f-mono);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:0 6px;margin-left:4px}
+main{padding:18px 20px 40px;max-width:1500px;margin:0 auto}
+.panel{display:none}.panel.act{display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.pad{padding:14px 16px}
+h2{font:700 15px/1.3 var(--f-display);margin:0 0 4px;text-wrap:balance}
+.hint{color:var(--muted);font-size:12.5px;margin:0}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;cursor:pointer;font-weight:500;white-space:nowrap;text-decoration:none;display:inline-block}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.08);color:var(--accent-ink)}
+.btn.danger{color:var(--bad)} .btn.danger:hover{border-color:var(--bad)}
+.btn.sm{padding:3px 8px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid-gen{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+@media (max-width:900px){.grid-gen{grid-template-columns:1fr}}
+textarea{width:100%;border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--bg);font:12.5px/1.6 var(--f-mono);resize:vertical}
+textarea.big{min-height:320px}
+input[type=text],input[type=number],input[type=search],select{border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--surface)}
+label.chk{display:flex;gap:6px;align-items:flex-start;font-size:13px;cursor:pointer}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;background:var(--surface);cursor:pointer}
+.chip b{font:600 13px var(--f-mono)}
+.chip.sel{border-color:var(--accent);background:var(--accent-soft)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:7px 14px;cursor:pointer;font-weight:500;color:var(--muted)}
+.seg button.act{background:var(--accent);color:var(--accent-ink)}
+.tag{display:inline-block;font-size:11px;font-weight:600;border-radius:4px;padding:1px 6px;white-space:nowrap}
+.t-master{background:var(--ok-soft);color:var(--ok)} .t-baru{background:var(--info-soft);color:var(--info)}
+.t-gagal{background:var(--bad-soft);color:var(--bad)} .t-cek{background:var(--warn-soft);color:var(--warn)}
+.t-manual{background:var(--warn-soft);color:var(--warn)} .t-auto{background:var(--info-soft);color:var(--info)} .t-import{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.g-Greige{background:var(--bg);color:var(--muted);border:1px solid var(--line)} .g-Warna,.g-Matang{background:var(--vio-soft);color:var(--vio)} .g-Eksternal{background:var(--warn-soft);color:var(--warn)} .g-Double{background:var(--ok-soft);color:var(--ok)}
+.tbl-wrap{overflow:auto;max-height:calc(100vh - 270px);border-top:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{position:sticky;top:0;background:var(--surface);text-align:left;font-weight:600;color:var(--muted);font-size:12px;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;z-index:1}
+td{padding:4px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.dirty td{background:var(--warn-soft)}
+td.num,th.num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+td.nm{font-weight:500;min-width:220px}
+td.idx{color:var(--muted);font:12px var(--f-mono)}
+td input.b{width:100%;min-width:150px;padding:4px 6px;border:1px solid transparent;background:transparent;border-radius:4px}
+td input.p{width:64px;text-align:right;padding:4px 6px;border:1px solid transparent;background:transparent;border-radius:4px;font-family:var(--f-mono)}
+td select.g{padding:3px 4px;border:1px solid transparent;background:transparent;border-radius:4px}
+td input.b:hover,td input.b:focus,td input.p:hover,td input.p:focus,td select.g:hover,td select.g:focus{border-color:var(--line);background:var(--surface)}
+input.unknown{color:var(--bad);text-decoration:underline dotted}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.banner{border:1px solid var(--warn);background:var(--warn-soft);color:var(--ink);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.banner.err{border-color:var(--bad);background:var(--bad-soft)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px}
+.spacer{flex:1}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.tile .v{font:600 22px var(--f-mono)} .tile .l{color:var(--muted);font-size:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px} @media (max-width:900px){.two{grid-template-columns:1fr}}
+.mgrid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start} @media (max-width:1100px){.mgrid{grid-template-columns:1fr}}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:0;width:min(560px,94vw)}
+dialog::backdrop{background:rgba(10,14,25,.45)}
+.dlg-h{padding:14px 18px;border-bottom:1px solid var(--line);font:700 15px var(--f-display)}
+.dlg-b{padding:14px 18px;display:grid;gap:10px}
+.dlg-f{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.fg{display:grid;gap:4px} .fg label{font-size:12px;color:var(--muted);font-weight:500}
+.fg3{display:grid;grid-template-columns:1fr 90px;gap:8px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:6px;font-size:13px;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+.mono{font-family:var(--f-mono)}
+.muted{color:var(--muted)}
+ol.steps{margin:6px 0 0;padding-left:18px;color:var(--muted);font-size:13px} ol.steps li{margin:3px 0}
+.prev{font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:4px 0}
+.rule textarea{min-height:90px}
+.rule textarea.add{min-height:44px}
+.lst{max-height:190px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.lst div{display:flex;gap:6px;align-items:center;padding:3px 4px 3px 8px;border-bottom:1px solid var(--line);font:11.5px/1.4 var(--f-mono);word-break:break-all}
+.lst div:last-child{border-bottom:0}
+.lst div span{flex:1}
+.lst button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 6px;border-radius:4px}
+.lst button:hover{color:var(--bad);background:var(--bad-soft)}
+.miss{border-top:1px solid var(--line);padding:10px 12px;background:var(--warn-soft);display:grid;gap:6px}
+.miss .mh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
+.miss .ml{display:flex;gap:6px;flex-wrap:wrap}
+.miss .mi{display:inline-flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px 3px 2px 8px;font:12px var(--f-mono)}
+.miss .mi b{font-family:var(--f-body);font-weight:600;color:var(--muted);font-size:11px}
+td.note{font-size:12px;color:var(--warn);min-width:160px}
+#login{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;align-items:center;justify-content:center;padding:16px}
+#login.show{display:flex}
+#login .box{width:min(380px,100%);display:grid;gap:12px}
+#login input{width:100%}
+.who{font-size:12px;color:var(--muted);display:none;align-items:center;gap:8px}
+.who.show{display:flex}
+.lst .none{color:var(--muted);font-family:var(--f-body);padding:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>Penjenisan Kain &amp; Benang</h1>
+    <span class="sub">Nama dicari di Database dulu; yang belum ada dijeniskan dengan aturan Master lalu disimpan</span>
+    <span class="dbstate" id="dbstate"><span class="dot wait"></span><span>Menghubungkan database…</span></span>
+    <span class="who" id="who"><span id="whoName"></span><button class="btn sm" id="btnLogout">Keluar</button></span>
+  </div>
+  <nav id="tabs">
+    <a href="#kain" data-tab="kain">Penjenisan Kain</a>
+    <a href="#benang" data-tab="benang">Penjenisan Benang</a>
+    <span class="sep"></span>
+    <a href="#database" data-tab="database">Database <span class="n" id="nDb">0</span></a>
+    <a href="#master" data-tab="master">Master Aturan <span class="n" id="nMaster">0</span></a>
+    <a href="#impor" data-tab="impor">Impor &amp; Ekspor</a>
+  </nav>
+</header>
+<main>
+  <div id="bannerArea"></div>
+
+  <!-- ============ PENJENISAN KAIN ============ -->
+  <section class="panel" id="p-kain">
+    <div class="grid-gen">
+      <div class="card pad" style="display:grid;gap:10px">
+        <div><h2>Daftar nama kain</h2><p class="hint">Tempel dari kolom Excel, satu nama per baris. Urutan dipertahankan supaya hasilnya bisa ditempel balik.</p></div>
+        <textarea class="big" id="inpK" spellcheck="false" placeholder="SJ CM 401 SPX 20 FULL"></textarea>
+        <div class="row">
+          <button class="btn pri" id="genK">Generate</button>
+          <label class="btn" for="fileK">Ambil dari file Excel…</label><input type="file" id="fileK" accept=".xlsx,.xlsb,.xlsm,.xls,.csv" hidden>
+          <button class="btn" id="clrK">Kosongkan</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="autoK" checked> <span>Simpan otomatis kain baru ke Database (hanya yang totalnya 100%)</span></label>
+        <ol class="steps">
+          <li>Nama yang sudah ada di Database langsung dipakai.</li>
+          <li>Nama baru dijeniskan: benang dari alias Master (maks. 3), % dari aturan spandex, grouping dari kata warna.</li>
+          <li>Koreksi di tabel lalu <b>Simpan perubahan</b>; koreksi dipakai untuk generate berikutnya.</li>
+          <li>Kain M71: hanya benang tepat di depan M71 yang memakai versi MISTI.</li>
+        </ol>
+      </div>
+      <div class="card">
+        <div class="toolbar"><div class="chips" id="chipsK"></div><span class="spacer"></span>
+          <button class="btn" id="saveK" disabled>Simpan perubahan</button><button class="btn" id="copyK" disabled>Salin hasil</button><button class="btn" id="xlsK" disabled>Unduh Excel</button></div>
+        <div class="miss" id="missK" hidden></div>
+        <div class="tbl-wrap" id="wrapK"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PENJENISAN BENANG ============ -->
+  <section class="panel" id="p-benang">
+    <div class="grid-gen">
+      <div class="card pad" style="display:grid;gap:10px">
+        <div><h2>Daftar nama benang</h2><p class="hint">Format sistem (<span class="mono">YARN;TC,65/35,NE,45,CM;…</span>) atau nama benang warna (<span class="mono">CVC 20 BRIGHT WHITE [CV01-0202 A]…</span>), satu per baris.</p></div>
+        <textarea class="big" id="inpB" spellcheck="false" placeholder="YARN;TC,65/35,NE,45,CM;IMS,S123I14034-10D"></textarea>
+        <div class="row">
+          <button class="btn pri" id="genB">Generate</button>
+          <label class="btn" for="fileB">Ambil dari file Excel…</label><input type="file" id="fileB" accept=".xlsx,.xlsb,.xlsm,.xls,.csv" hidden>
+          <button class="btn" id="clrB">Kosongkan</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="autoB" checked> <span>Simpan otomatis benang baru ke Database (hanya yang jenisnya dikenali)</span></label>
+        <ol class="steps">
+          <li>Benang hanya punya 1 jenis: diambil alias yang muncul paling awal (TC sebelum CM).</li>
+          <li>Format <span class="mono">YARN;</span> dibaca kode + angka setelah <span class="mono">NE</span>; kode dalam kurung siku diabaikan.</li>
+          <li>Grouping: Eksternal → Double Winder → Warna → Greige, sesuai daftar di Master Aturan.</li>
+          <li>Jenis tidak dikenali? Klik <b>+ Master</b> di barisnya untuk menambah jenis baru.</li>
+        </ol>
+      </div>
+      <div class="card">
+        <div class="toolbar"><div class="chips" id="chipsB"></div><span class="spacer"></span>
+          <button class="btn" id="saveB" disabled>Simpan perubahan</button><button class="btn" id="copyB" disabled>Salin hasil</button><button class="btn" id="xlsB" disabled>Unduh Excel</button></div>
+        <div class="miss" id="missB" hidden></div>
+        <div class="tbl-wrap" id="wrapB"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DATABASE ============ -->
+  <section class="panel" id="p-database">
+    <div class="row" style="margin-bottom:12px"><div class="seg" id="dbSeg"><button data-v="kain" class="act">Kain</button><button data-v="benang">Benang</button></div><span class="hint">Hasil penjenisan yang sudah tersimpan. Generate selalu mengambil dari sini lebih dulu.</span></div>
+    <div class="tiles" id="dbTiles"></div>
+    <div class="card">
+      <div class="toolbar">
+        <input type="search" id="qDb" placeholder="Cari nama atau jenis…" style="min-width:260px">
+        <select id="fSrc" aria-label="Filter sumber"><option value="">Semua sumber</option><option value="manual">Manual</option><option value="auto">Otomatis</option><option value="import">Impor</option></select>
+        <select id="fGrp" aria-label="Filter grouping"></select>
+        <span class="muted" id="dbInfo"></span><span class="spacer"></span>
+        <button class="btn" id="expDb">Unduh Excel</button>
+      </div>
+      <div class="tbl-wrap" id="wrapDb"></div>
+    </div>
+  </section>
+
+  <!-- ============ MASTER ============ -->
+  <section class="panel" id="p-master">
+    <div class="mgrid">
+      <div class="card">
+        <div class="toolbar">
+          <h2 style="margin:0">Master Jenis Benang</h2>
+          <input type="search" id="qM" placeholder="Cari nama atau alias…" style="min-width:220px">
+          <span class="muted" id="mInfo"></span><span class="spacer"></span>
+          <button class="btn pri" id="addM">Tambah jenis benang</button>
+        </div>
+        <p class="hint" style="padding:0 12px 10px">Daftar jenis benang dan aliasnya (dulu sheet MASTER JENIS), dipakai untuk kain dan benang. Alias dipisah <span class="mono">;</span>. Alias berakhiran angka juga mengenali akhiran 1 (<span class="mono">CM 24</span> → <span class="mono">CM 241</span>). <span class="mono">SAMPLE</span> dilewati. Nama dengan M71/MISTI memakai versi MISTI bila ada. <b>% tetap</b> untuk spandex.</p>
+        <div class="tbl-wrap" id="wrapM"></div>
+      </div>
+      <div class="card pad rule" style="display:grid;gap:12px">
+        <div><h2>Aturan Grouping</h2><p class="hint">Satu kata atau nama per baris. Baris yang dikoreksi manual di Database tidak ikut diubah.</p></div>
+        <div class="fg"><label for="addEks">Benang Eksternal (milik makloon) <span id="cntEks"></span></label>
+          <textarea class="add" id="addEks" placeholder="Tempel nama benang baru, boleh beberapa baris sekaligus"></textarea>
+          <div class="row"><button class="btn sm" id="btnAddEks">Tambah ke daftar Eksternal</button></div>
+          <div class="lst" id="lstEks"></div></div>
+        <div class="fg"><label for="addDw">Benang Double Winder <span id="cntDw"></span></label>
+          <textarea class="add" id="addDw" placeholder="Tempel nama benang baru"></textarea>
+          <div class="row"><button class="btn sm" id="btnAddDw">Tambah ke daftar Double Winder</button></div>
+          <div class="lst" id="lstDw"></div>
+          <label class="chk"><input type="checkbox" id="rDwPola"> <span>Nama yang mengandung <span class="mono">M D W</span> atau <span class="mono">+</span> juga dianggap Double Winder</span></label></div>
+        <div class="fg"><label for="rWarna">Kata warna → Benang Warna / Kain Matang</label><textarea id="rWarna"></textarea></div>
+        <div class="fg"><label for="rMatang">Kata tambahan khusus Kain Matang</label><textarea id="rMatang" placeholder="mis. CELUP"></textarea></div>
+        <label class="chk"><input type="checkbox" id="rKurung"> <span>Kode warna dalam kurung siku <span class="mono">[…]</span> dianggap berwarna</span></label>
+        <div class="row"><button class="btn pri" id="saveRule">Simpan aturan</button><button class="btn" id="applyRule">Terapkan ke Database</button></div>
+        <p class="hint" id="ruleInfo"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ IMPOR ============ -->
+  <section class="panel" id="p-impor">
+    <div class="two">
+      <div class="card pad" style="display:grid;gap:10px;align-content:start">
+        <h2>1. Impor dari Apps Penjenisan (Excel lama)</h2>
+        <p class="hint">File <span class="mono">Apps_Penjenisan</span> (.xlsb/.xlsx). Dibaca: <span class="mono">MASTER JENIS</span> → Master Jenis Benang, <span class="mono">SPANDEX</span> → % tetap, <span class="mono">Penjenisan</span> → Database Kain.</p>
+        <div class="row"><label class="btn pri" for="fileOld">Pilih file…</label><input type="file" id="fileOld" accept=".xlsx,.xlsb,.xlsm,.xls" hidden><span class="muted" id="oldName"></span></div>
+        <div id="oldPrev"></div>
+      </div>
+      <div class="card pad" style="display:grid;gap:10px;align-content:start">
+        <h2>2. Impor Database dari Excel</h2>
+        <p class="hint"><b>Benang:</b> kolom <span class="mono">Nama Benang | Jenis Benang | Grouping</span>. <b>Kain:</b> <span class="mono">Nama Kain | Benang 1 | % | Benang 2 | % | Benang 3 | % | … | Grouping</span>. Baris judul dikenali otomatis; grouping kosong diisi dari aturan.</p>
+        <div class="row"><label class="btn" for="fileDbB">File database benang…</label><input type="file" id="fileDbB" accept=".xlsx,.xlsb,.xlsm,.xls,.csv" hidden><label class="btn" for="fileDbK">File database kain…</label><input type="file" id="fileDbK" accept=".xlsx,.xlsb,.xlsm,.xls,.csv" hidden></div>
+        <div id="dbPrev"></div>
+        <h2 style="margin-top:8px">Ekspor</h2>
+        <div class="row"><button class="btn" id="expK2">Database Kain</button><button class="btn" id="expB2">Database Benang</button><button class="btn" id="expM2">Master Jenis Benang</button></div>
+        <p class="hint">Semua data tersimpan di database halaman ini dan sama untuk semua orang yang membuka link-nya. Akses Contributor ke atas bisa menambah dan mengubah.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="dlgK"><form method="dialog">
+  <div class="dlg-h">Ubah kain</div>
+  <div class="dlg-b">
+    <div class="fg"><label>Nama kain</label><div id="dkNama" style="font-weight:600"></div></div>
+    <div class="fg3"><div class="fg"><label for="dkB1">Benang 1</label><input type="text" id="dkB1" list="dlJenis"></div><div class="fg"><label for="dkP1">%</label><input type="number" id="dkP1" step="0.01"></div></div>
+    <div class="fg3"><div class="fg"><label for="dkB2">Benang 2</label><input type="text" id="dkB2" list="dlJenis"></div><div class="fg"><label for="dkP2">%</label><input type="number" id="dkP2" step="0.01"></div></div>
+    <div class="fg3"><div class="fg"><label for="dkB3">Benang 3</label><input type="text" id="dkB3" list="dlJenis"></div><div class="fg"><label for="dkP3">%</label><input type="number" id="dkP3" step="0.01"></div></div>
+    <div class="fg"><label for="dkG">Grouping</label><select id="dkG"><option>Greige</option><option>Matang</option></select></div>
+    <div class="row"><button type="button" class="btn sm" id="dkAuto">Hitung % otomatis</button><button type="button" class="btn sm" id="dkRule">Jeniskan ulang dengan aturan</button><span class="muted" id="dkTot"></span></div>
+  </div>
+  <div class="dlg-f"><button type="button" class="btn danger" id="dkDel">Hapus dari Database</button><span class="spacer"></span><button type="button" class="btn" id="dkNo">Batal</button><button type="button" class="btn pri" id="dkOk">Simpan</button></div>
+</form></dialog>
+
+<dialog id="dlgB"><form method="dialog">
+  <div class="dlg-h">Ubah benang</div>
+  <div class="dlg-b">
+    <div class="fg"><label>Nama benang</label><div id="dbNama" style="font-weight:600;word-break:break-all"></div></div>
+    <div class="fg"><label for="dbJenis">Jenis benang</label><input type="text" id="dbJenis" list="dlJenis"></div>
+    <div class="fg"><label for="dbG">Grouping</label><select id="dbG"><option>Greige</option><option>Warna</option><option>Eksternal</option><option>Double Winder</option></select></div>
+    <div class="row"><button type="button" class="btn sm" id="dbRule">Jeniskan ulang dengan aturan</button></div>
+  </div>
+  <div class="dlg-f"><button type="button" class="btn danger" id="dbDel">Hapus dari Database</button><span class="spacer"></span><button type="button" class="btn" id="dbNo">Batal</button><button type="button" class="btn pri" id="dbOk">Simpan</button></div>
+</form></dialog>
+
+<dialog id="dlgM"><form method="dialog">
+  <div class="dlg-h" id="dmTitle">Jenis benang</div>
+  <div class="dlg-b">
+    <div class="fg"><label for="dmNama">Nama jenis benang</label><input type="text" id="dmNama" list="dlJenis" autocomplete="off"><span class="hint" id="dmHint"></span></div>
+    <div class="fg"><label for="dmAlias">Alias (pisahkan dengan ;)</label><input type="text" id="dmAlias"></div>
+    <div class="two" style="gap:8px"><div class="fg"><label for="dmT1">Tambahan 1</label><input type="text" id="dmT1" placeholder="SAMPLE / M71"></div><div class="fg"><label for="dmT2">Tambahan 2</label><input type="text" id="dmT2"></div></div>
+    <div class="fg"><label for="dmFix">% tetap (kosongkan jika bukan spandex)</label><input type="number" id="dmFix" step="0.01" placeholder="contoh: 2 untuk 2%"></div>
+  </div>
+  <div class="dlg-f"><button type="button" class="btn danger" id="dmDel">Hapus</button><span class="spacer"></span><button type="button" class="btn" id="dmNo">Batal</button><button type="button" class="btn pri" id="dmOk">Simpan</button></div>
+</form></dialog>
+
+<dialog id="dlgC">
+  <div class="dlg-h" id="dcTitle">Konfirmasi</div>
+  <div class="dlg-b" id="dcBody"></div>
+  <div class="dlg-f"><button type="button" class="btn" id="dcNo">Batal</button><button type="button" class="btn pri" id="dcYes">Lanjut</button></div>
+</dialog>
+
+<datalist id="dlJenis"></datalist>
+<div id="login"><form class="card pad box" id="fmLogin">
+  <h2>Penjenisan Kain &amp; Benang</h2>
+  <p class="hint">Data ini hanya untuk tim. Masuk dengan akun yang didaftarkan admin.</p>
+  <div class="fg"><label for="lgEmail">Email</label><input type="text" id="lgEmail" autocomplete="username" inputmode="email"></div>
+  <div class="fg"><label for="lgPass">Password</label><input type="password" id="lgPass" autocomplete="current-password" style="border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--surface)"></div>
+  <div class="row"><button class="btn pri" id="lgGo" type="submit">Masuk</button><button class="btn" id="lgReset" type="button">Lupa password</button></div>
+  <p class="hint" id="lgMsg" role="status"></p>
+</form></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
+<script src="config.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/adapter-supabase.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
