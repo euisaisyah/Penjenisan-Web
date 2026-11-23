@@ -85,7 +85,9 @@ function prepYarnText(raw){
   let s=String(raw||'').toUpperCase().replace(/\[[^\]]*\]/g,' ').replace(/\t/g,' ');
   const yarn=/^\s*YARN\s*;/.test(s);
   if(yarn) s=s.replace(/^\s*YARN\s*;/,'').split(';')[0];
-  s=s.replace(/(\d+)\s*T?\s*-\s*(\d+)\b/g,'$1/$2').replace(/[.,;]/g,' ').replace(/\+/g,' + ')
+  s=s.replace(/(\d+)\s*[DT]?\s*\/\s*(\d+)\s*F?(?=[^A-Z]|$)/g,'$1/$2')      // 75D/36F -> 75/36
+     .replace(/(\d+)\s*T?\s*-\s*(\d+)\b/g,'$1/$2')                          // 55T-48 -> 55/48
+     .replace(/[.,;()\[\]{}:]/g,' ').replace(/\+/g,' + ')
      .replace(/([A-Z])(\d)/g,'$1 $2').replace(/(\d)([A-Z])/g,'$1 $2').replace(/\bM 71\b/g,'M71').replace(/\s+/g,' ').trim();
   return {yarn,s};
 }
@@ -110,7 +112,9 @@ function yarnCands(raw){
       if(ri>=0) add(fixCode(lastAlphaBefore(ri)||tok.find(t=>isAlpha(t)&&!BUKAN_KODE.has(t))||'',tok),tok[ri]);
     }
     if(yarn&&cands.length) continue;   // format YARN: cukup kandidat (a)/(b)
+    const kodeUtama=tok.find(t=>isAlpha(t)&&!BUKAN_KODE.has(t));
     for(let i=0;i<tok.length-1;i++){
+      if(yarn&&tok[i]!==kodeUtama) continue;   // YARN: hanya kode pertama (abaikan kode supplier seperti OR 1)
       if(isAlpha(tok[i])&&!BUKAN_KODE.has(tok[i])&&tok[i]!=='M71'&&(isNum(tok[i+1])||isRatio(tok[i+1]))) add(fixCode(tok[i],tok),tok[i+1]);
     }
   }
