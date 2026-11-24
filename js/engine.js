@@ -19,7 +19,12 @@ function prepMaster(list){
     out.push({nama,isMisti,isM71Tag,isSpx,res,al});
   });
   const amap=new Map();
-  out.forEach(m=>m.al.forEach(a=>{ if(!amap.has(a)) amap.set(a,[]); amap.get(a).push(m); }));
+  const put=(a,m)=>{ if(!amap.has(a)) amap.set(a,[]); if(!amap.get(a).includes(m)) amap.get(a).push(m); };
+  out.forEach(m=>m.al.forEach(a=>{
+    put(a,m);
+    const v=a.replace(/(\d+)\s*(?:DTEX|DEN|TEX|D|T)\s*\/\s*(\d+)\s*F?\b/g,'$1/$2');   // alias PLY 167D/48 juga cocok dgn PLY 167/48
+    if(v!==a) put(v,m);
+  }));
   out.amap=amap;
   return out;
 }
@@ -85,7 +90,7 @@ function prepYarnText(raw){
   let s=String(raw||'').toUpperCase().replace(/\[[^\]]*\]/g,' ').replace(/\t/g,' ');
   const yarn=/^\s*YARN\s*;/.test(s);
   if(yarn) s=s.replace(/^\s*YARN\s*;/,'').split(';')[0];
-  s=s.replace(/(\d+)\s*[DT]?\s*\/\s*(\d+)\s*F?(?=[^A-Z]|$)/g,'$1/$2')      // 75D/36F -> 75/36
+  s=s.replace(/(\d+)\s*(?:DTEX|DEN|TEX|D|T)?\s*\/\s*(\d+)\s*F?(?=[^A-Z]|$)/g,'$1/$2')   // 75D/36F, 167DTEX/96F -> 75/36, 167/96
      .replace(/(\d+)\s*T?\s*-\s*(\d+)\b/g,'$1/$2')                          // 55T-48 -> 55/48
      .replace(/[.,;()\[\]{}:]/g,' ').replace(/\+/g,' + ')
      .replace(/([A-Z])(\d)/g,'$1 $2').replace(/(\d)([A-Z])/g,'$1 $2').replace(/\bM 71\b/g,'M71').replace(/\s+/g,' ').trim();
@@ -112,7 +117,7 @@ function yarnCands(raw){
       if(ri>=0) add(fixCode(lastAlphaBefore(ri)||tok.find(t=>isAlpha(t)&&!BUKAN_KODE.has(t))||'',tok),tok[ri]);
       // (c) KODE,Td,angka denier  (SPX,Td,70D -> SPX 70)
       const ki=tok.findIndex(t=>isAlpha(t)&&!BUKAN_KODE.has(t));
-      if(ki>=0){ let j=ki+1; if(tok[j]==='TD') j++; if(isNum(tok[j])) add(fixCode(tok[ki],tok),String(+tok[j])); }
+      if(ki>=0&&ri<0){ let j=ki+1; if(tok[j]==='TD') j++; if(isNum(tok[j])) add(fixCode(tok[ki],tok),String(+tok[j])); }   // hanya kalau tidak ada angka/angka
     }
     if(yarn&&cands.length) continue;   // format YARN: cukup kandidat (a)/(b)
     const kodeUtama=tok.find(t=>isAlpha(t)&&!BUKAN_KODE.has(t));
