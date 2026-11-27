@@ -20,7 +20,7 @@ Halaman webnya di-hosting di **GitHub Pages**, sedangkan database dan login mema
 
 ### 2. Buat tabel
 1. Buka **SQL Editor**, klik **New query**, tempel seluruh isi `supabase/schema.sql`, lalu klik **Run**.
-2. Hasilnya: 4 tabel (`master_benang`, `aturan`, `db_kain`, `db_benang`) dengan akses khusus user yang sudah login. Daftar Eksternal dan Double Winder ikut terisi.
+2. Hasilnya: 4 tabel (`master_benang`, `aturan`, `db_kain`, `db_benang`) dengan akses khusus user yang sudah login. Daftar Eksternal dan Double Winder diisi lewat web (tab Master Aturan).
 
 ### 3. Atur login supaya hanya tim yang bisa masuk
 1. **Authentication → Sign In / Providers → Email:** matikan **Allow new users to sign up**. Dengan begitu orang luar tidak bisa mendaftar sendiri.
