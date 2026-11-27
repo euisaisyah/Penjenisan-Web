@@ -114,7 +114,11 @@ function yarnCands(raw){
         else if(isAlpha(a)&&isNum(b)) add(fixCode(a,tok),b);
       }
       const ri=tok.findIndex(isRatio);
-      if(ri>=0) add(fixCode(lastAlphaBefore(ri)||tok.find(t=>isAlpha(t)&&!BUKAN_KODE.has(t))||'',tok),tok[ri]);
+      if(ri>=0){
+        const utama=tok.find(t=>isAlpha(t)&&!BUKAN_KODE.has(t))||'';
+        add(fixCode(lastAlphaBefore(ri)||utama,tok),tok[ri]);   // kode terdekat (DTY.75D/36F -> DTY 75/36)
+        if(utama) add(fixCode(utama,tok),tok[ri]);               // lalu kode utama (DTY SD-R300/288 -> DTY 300/288)
+      }
       // (c) KODE,Td,angka denier  (SPX,Td,70D -> SPX 70)
       const ki=tok.findIndex(t=>isAlpha(t)&&!BUKAN_KODE.has(t));
       if(ki>=0&&ri<0){ let j=ki+1; if(tok[j]==='TD') j++; if(isNum(tok[j])) add(fixCode(tok[ki],tok),String(+tok[j])); }   // hanya kalau tidak ada angka/angka
