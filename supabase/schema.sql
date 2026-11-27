@@ -94,9 +94,6 @@ begin
   end loop;
 end $$;
 
--- Isi awal aturan: daftar Benang Eksternal & Double Winder
-insert into public.aturan (id, eksternal, double_winder)
-values (1,
-  array['YARN; Modal,NE 40 LENZING.CM;MARTIN COTT4060 HOSI.Y2QS140303', 'YARN;COT,NE,40,CM,BCI,COMPACT;INDORAMA.(NAG)I8640-617Q', 'YARN;CVC,60/40,NE,24,M71;INDOLIBERTY,V14A-06B', 'YARN;SPX,Td,22-20 5628 ;LYCRA(NAG),1U072', 'YARN;COT,NE,40,CM ; DELTA MERLIN(NAG)TORAY.015A035Z', 'YARN;CVC,60/40,NE,24,CM;GLOBE.24277-08A', 'YARN;PLY,Td,55T-48,GAHL;TETORON,TORAY.(NAG).AEF17/MOOO/AA', 'YARN;PLY,Td,84T-72,9D24L;TETORON,TORAY.(NAG).R578/MTO/AA', 'YARN;NYLON.40-34.2W9T-CH-A8BOX.02K20LGTW.TORAY.02-A8'],
-  array['YARN ;M D W RY,NE 40 + PL 75/36 DD;SUPERBTEX,NL', 'YARN;M D W NE,CD 30 + PL83/36;SUPERBTEX,NL', 'YARN;M D W,NE, CD 30 + PL75/36DD;SUPERBTEX,NL', 'YARN;RYN,NE,40MVS+FILL75/36SD;SUPERBTEX,NL'])
+-- Siapkan baris aturan (daftar Eksternal / Double Winder diisi lewat web: Master Aturan)
+insert into public.aturan (id) values (1)
 on conflict (id) do nothing;
