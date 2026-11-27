@@ -129,7 +129,7 @@ textarea.big{min-height:420px}
 .lst div span{flex:1}
 .lst button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 6px;border-radius:4px}
 .lst button:hover{color:var(--bad);background:var(--bad-soft)}
-.miss[hidden],#login:not(.show){display:none !important}
+[hidden],.miss[hidden],#login:not(.show){display:none !important}
 .miss{border-top:1px solid var(--line);padding:10px 12px;background:var(--warn-soft);display:grid;gap:6px}
 .miss .mh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
 .miss .ml{display:flex;gap:6px;flex-wrap:wrap}
@@ -148,6 +148,8 @@ td.note{font-size:12px;color:var(--warn);min-width:160px}
 .btn.ghost:hover{color:var(--bad);border-color:transparent;background:var(--bad-soft)}
 @media (max-width:640px){.who .em,.dbstate span:last-child{display:none}}
 .lst.src{max-height:170px}
+.mode{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.mode .chk{margin-top:2px}
 td.ck,th.ck{width:34px;padding-left:12px;padding-right:0}
 input.sel,#selAll{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;vertical-align:middle}
 tr.picked td{background:var(--accent-soft)}
@@ -337,10 +339,15 @@ tr.picked td{background:var(--accent-soft)}
   <div class="dlg-h" id="dmTitle">Jenis benang</div>
   <div class="dlg-b">
     <div class="fg" id="dmSrcBox" hidden><label id="dmSrcLbl">Nama asli</label><div class="lst src" id="dmSrc"></div></div>
+    <div class="fg mode" id="dmModeBox" hidden><label>Cara simpan</label>
+      <label class="chk"><input type="radio" name="dmMode" value="db" id="dmModeDb"> <span><b>Simpan ke Database saja</b>: hanya untuk nama di atas, Master tidak berubah</span></label>
+      <label class="chk"><input type="radio" name="dmMode" value="alias" id="dmModeAlias"> <span><b>Tambah alias ke Master</b>: berlaku juga untuk nama lain yang cocok nanti</span></label></div>
     <div class="fg"><label for="dmNama">Nama jenis benang</label><input type="text" id="dmNama" list="dlJenis" autocomplete="off"><span class="hint" id="dmHint"></span></div>
+<div id="dmAliasBox" style="display:grid;gap:10px">
     <div class="fg"><label for="dmAlias">Alias (pisahkan dengan ;)</label><input type="text" id="dmAlias"></div>
     <div class="two" style="gap:8px"><div class="fg"><label for="dmT1">Tambahan 1</label><input type="text" id="dmT1" placeholder="SAMPLE / M71"></div><div class="fg"><label for="dmT2">Tambahan 2</label><input type="text" id="dmT2"></div></div>
     <div class="fg"><label for="dmFix">% tetap (kosongkan jika bukan spandex)</label><input type="number" id="dmFix" step="0.01" placeholder="contoh: 2 untuk 2%"></div>
+    </div>
   </div>
   <div class="dlg-f"><button type="button" class="btn danger" id="dmDel">Hapus</button><span class="spacer"></span><button type="button" class="btn" id="dmNo">Batal</button><button type="button" class="btn pri" id="dmOk">Simpan</button></div>
 </form></dialog>
