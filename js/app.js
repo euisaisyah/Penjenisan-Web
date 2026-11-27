@@ -370,10 +370,18 @@ function renderMaster(){
   $('wrapM').innerHTML=`<table><thead><tr><th>Nama jenis benang</th><th>Alias</th><th>Tambahan</th><th class="num">% tetap</th><th></th></tr></thead><tbody>${list.map(b=>`<tr><td class="nm">${esc(b.nama)}</td><td class="mono" style="font-size:12.5px">${esc(b.alias)}</td><td>${tg(b.t1)} ${tg(b.t2)}</td><td class="num">${hasFix(b)?fmtPct(b.fix):''}</td><td><button class="btn sm" data-m="${esc(b.id)}">Ubah</button></td></tr>`).join('')}</tbody></table>`;
 }
 $('qM').oninput=renderMaster;
-let mCur=null;
+let mCur=null, mPre=null;
+const dmMode=()=>(!$('dmModeBox').hidden&&$('dmModeDb').checked)?'db':'alias';
+function dmApplyMode(){ $('dmAliasBox').style.display=dmMode()==='db'?'none':'grid'; dmHint(); }
 function dmHint(){
   if(mCur){ $('dmHint').textContent=''; return; }
   const ex=S.mList.find(b=>norm(b.nama)===norm($('dmNama').value));
+  if(dmMode()==='db'){
+    const n=(mPre&&mPre.src||[]).length, typed=$('dmNama').value.trim();
+    $('dmAliasBox').style.display=(ex||!typed)?'none':'grid';
+    $('dmHint').textContent=ex?`${n} benang di atas akan disimpan ke Database sebagai "${ex.nama}". Master tidak berubah.`:(typed?'Jenis ini belum ada di Master, jadi akan dibuat sebagai jenis baru di Master dengan alias di bawah.':'Pilih jenis yang sudah ada di Master (ketik lalu pilih dari daftar), atau ketik nama jenis baru.');
+    return;
+  }
   $('dmHint').textContent=ex?`"${ex.nama}" sudah ada di Master: alias akan ditambahkan ke jenis itu (alias sekarang: ${ex.alias||'-'}).`:'Ketik nama jenis baru, atau pilih jenis yang sudah ada untuk menambah alias.';
 }
 function openM(b,pre){
@@ -381,8 +389,12 @@ function openM(b,pre){
   $('dmNama').value=b?b.nama:(pre&&pre.nama||''); $('dmAlias').value=b?b.alias||'':(pre&&pre.alias||'');
   $('dmT1').value=b?b.t1||'':''; $('dmT2').value=b?b.t2||'':'';
   $('dmFix').value=b&&hasFix(b)?pctIn(b.fix):''; $('dmDel').style.display=b?'':'none';
+  mPre=pre||null;
   const src=pre&&pre.src||[];
   $('dmSrcBox').hidden=!src.length;
+  $('dmModeBox').hidden=!(src.length&&pre.type==='benang'&&!b);
+  $('dmModeDb').checked=true; $('dmModeAlias').checked=false;
+  $('dmAliasBox').style.display=$('dmModeBox').hidden?'grid':'none';
   if(src.length){
     $('dmSrcLbl').textContent=`Nama ${pre.type||''} asli yang memunculkan "${pre.seg}" (${src.length})`;
     const words=String(pre.seg).split(/\s+/).map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
@@ -391,12 +403,27 @@ function openM(b,pre){
   }
   dmHint(); $('dlgM').showModal(); $('dmNama').focus();
 }
-$('dmNama').oninput=dmHint;
+$('dmNama').oninput=dmHint; $('dmModeDb').onchange=dmApplyMode; $('dmModeAlias').onchange=dmApplyMode;
 $('wrapM').addEventListener('click',e=>{const t=e.target.closest('[data-m]'); if(t) openM(S.mList.find(b=>b.id===t.dataset.m));});
 $('addM').onclick=()=>openM(null); $('dmNo').onclick=()=>$('dlgM').close();
 $('dmOk').onclick=async()=>{
   const nama=$('dmNama').value.replace(/\s+/g,' ').trim(); if(!nama){ toast('Nama wajib diisi.'); return; }
   if(!needDb()) return;
+  if(dmMode()==='db'){
+    const ex=S.mList.find(b=>norm(b.nama)===norm(nama));
+    if(ex){
+    const names=mPre.src||[];
+    try{
+      await Data.saveStore('benang',names.map(n=>({nama:n,jenis:ex.nama,g:groupBenang(n,S.rule),gm:false,src:'manual'})));
+      const set=new Set(names.map(n=>keyOf(n).k));
+      S.gen.benang.forEach(r=>{ if(r.nama&&set.has(keyOf(r.nama).k)) Object.assign(r,{jenis:ex.nama,status:'master',saved:true,dirty:false,note:'',unk:[]}); });
+      renderGen('benang'); $('dlgM').close();
+      toast(`${names.length} benang disimpan ke Database sebagai ${ex.nama}. Master tidak berubah.`,4000);
+    }catch(e){ toast(writeErr(e),4500); }
+    return;
+    }
+    // jenis baru: lanjut ke pembuatan jenis baru di Master di bawah
+  }
   const aliasIn=$('dmAlias').value.split(';').map(s=>s.trim()).filter(Boolean);
   const fx=$('dmFix').value.trim();
   try{
